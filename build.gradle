@@ -1,0 +1,101 @@
+import org.gradle.api.attributes.java.TargetJvmVersion
+
+plugins {
+    id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+    maven {
+        name = 'MinecraftForge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+    maven {
+        name = 'NeoForged'
+        url = 'https://maven.neoforged.net/releases'
+    }
+}
+
+sourceSets {
+    forge {
+        java.srcDirs = ['src/forge/java']
+        resources.srcDirs = ['src/forge/resources']
+        compileClasspath += sourceSets.main.output
+    }
+    neoforge {
+        java.srcDirs = ['src/neoforge/java']
+        resources.srcDirs = ['src/neoforge/resources']
+        compileClasspath += sourceSets.main.output
+    }
+}
+
+configurations.named('forgeCompileClasspath') {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+    }
+}
+configurations.named('neoforgeCompileClasspath') {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+    }
+}
+
+dependencies {
+    compileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+    forgeCompileOnly("net.minecraftforge:javafmllanguage:${project.forge_mc_version}-${project.forge_version}") {
+        transitive = false
+    }
+    neoforgeCompileOnly("net.neoforged.fancymodloader:loader:${project.fancymodloader_version}") {
+        transitive = false
+    }
+}
+
+base {
+    archivesName = project.archives_base_name
+}
+
+def jdk25Home = file(System.getenv("JDK25_HOME") ?: "${rootDir}/toolchains/jdk25")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+    options.fork = true
+    options.forkOptions.javaHome = jdk25Home
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filteringCharset 'UTF-8'
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+tasks.named('processForgeResources') {
+    inputs.property 'version', project.version
+    filteringCharset 'UTF-8'
+    filesMatching('META-INF/mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+tasks.named('processNeoforgeResources') {
+    inputs.property 'version', project.version
+    filteringCharset 'UTF-8'
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    from sourceSets.forge.output
+    from sourceSets.neoforge.output
+}

@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+logoFile = "icon.png"
+
+[[mods]]
+modId = "version_world_sorter"
+version = "${version}"
+displayName = "Version World Sorter"
+description = "MCバージョンに合わないセーブをワールド選択画面から非表示にする"
+
+[[dependencies.version_world_sorter]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.20.5,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.version_world_sorter]]
+modId = "neoforge"
+type = "required"
+versionRange = "[20.5,)"
+ordering = "NONE"
+side = "CLIENT"

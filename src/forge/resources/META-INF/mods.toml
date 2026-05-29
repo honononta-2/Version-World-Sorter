@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[50,)"
+license="MIT"
+logoFile="icon.png"
+
+[[mods]]
+modId="version_world_sorter"
+version="${version}"
+displayName="Version World Sorter"
+description="MCバージョンに合わないセーブをワールド選択画面から非表示にする"
+displayTest="IGNORE_ALL_VERSION"
+
+[[dependencies.version_world_sorter]]
+    modId="forge"
+    mandatory=true
+    versionRange="[50,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.version_world_sorter]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.5,)"
+    ordering="NONE"
+    side="BOTH"
