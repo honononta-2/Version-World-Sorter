@@ -19,6 +19,9 @@ public final class WorldListFilter {
     private volatile List<?> capturedOriginalList;
     private volatile Object toggleButton;
     private volatile boolean initialModeChosen;
+    private volatile Mode displayedMode;
+    private volatile Object listLoadedScreen;
+    private volatile boolean toggleEnabled;
 
     public WorldListFilter(Names names, String currentMcVersion) {
         this.names = names;
@@ -60,6 +63,7 @@ public final class WorldListFilter {
             CompletableFuture<List<Object>> wrapped = ((CompletableFuture<List<?>>) current).thenApply(list -> {
                 capturedOriginalList = list;
                 chooseInitialMode(list);
+                listLoadedScreen = screen;
                 return filterList(list, ModeState.current());
             });
             pendingField.set(worldList, wrapped);
@@ -108,13 +112,8 @@ public final class WorldListFilter {
 
             Object initialLabel = literal.invoke(null, buttonLabel(ModeState.current()));
 
-            Object[] buttonHolder = new Object[1];
-
             InvocationHandler handler = (proxy, method, args) -> {
                 ModeState.set(nextNonEmptyMode());
-                if (buttonHolder[0] != null) {
-                    setButtonMessage(buttonHolder[0], ModeState.current());
-                }
                 onModeChanged(screen);
                 return null;
             };
@@ -138,8 +137,12 @@ public final class WorldListFilter {
 
             Method build = builder.getClass().getMethod(names.builderBuildMethod);
             Object button = build.invoke(builder);
-            buttonHolder[0] = button;
             this.toggleButton = button;
+            this.displayedMode = ModeState.current();
+
+            // 読込完了までボタンを無効化
+            setButtonActive(button, false);
+            this.toggleEnabled = false;
 
             Class<?> guiEventListenerClass = Class.forName(names.guiEventListenerClass);
             Method addWidget = findMethod(screen.getClass(), names.addRenderableWidgetMethod, guiEventListenerClass);
@@ -177,6 +180,18 @@ public final class WorldListFilter {
         if (button == null || !isSelectWorldScreen(screen)) {
             return;
         }
+        // ラベルを現モードに同期
+        Mode mode = ModeState.current();
+        if (mode != displayedMode) {
+            setButtonMessage(button, mode);
+            displayedMode = mode;
+        }
+        // 読込完了でボタンを有効化
+        boolean ready = (listLoadedScreen == screen);
+        if (ready != toggleEnabled) {
+            setButtonActive(button, ready);
+            toggleEnabled = ready;
+        }
         int[] pos = buttonPosition(screen);
         if (pos == null) {
             return;
@@ -200,7 +215,7 @@ public final class WorldListFilter {
 
     private List<Object> filterList(List<?> sourceList, Mode mode) {
         if (sourceList == null) {
-            return null;
+            return new ArrayList<>();
         }
         if (mode == Mode.ALL) {
             return new ArrayList<>(sourceList);
@@ -245,10 +260,6 @@ public final class WorldListFilter {
             if (countKept(list, mode) > 0) {
                 if (mode != ModeState.current()) {
                     ModeState.set(mode);
-                    Object button = toggleButton;
-                    if (button != null) {
-                        setButtonMessage(button, mode);
-                    }
                 }
                 Log.log("initial mode=" + mode);
                 return;
@@ -273,6 +284,15 @@ public final class WorldListFilter {
             candidate = candidate.next();
         }
         return current;
+    }
+
+    private void setButtonActive(Object button, boolean active) {
+        try {
+            Field f = findField(button.getClass(), names.activeField);
+            f.setAccessible(true);
+            f.setBoolean(button, active);
+        } catch (Throwable ignore) {
+        }
     }
 
     private void setButtonMessage(Object button, Mode mode) {
@@ -346,6 +366,7 @@ public final class WorldListFilter {
         final String getWidthMethod;
         final String setXMethod;
         final String setYMethod;
+        final String activeField;
 
         public Names(
                 String selectWorldScreenClass,
@@ -369,7 +390,8 @@ public final class WorldListFilter {
                 String getYMethod,
                 String getWidthMethod,
                 String setXMethod,
-                String setYMethod
+                String setYMethod,
+                String activeField
         ) {
             this.selectWorldScreenClass = selectWorldScreenClass;
             this.listField = listField;
@@ -393,6 +415,7 @@ public final class WorldListFilter {
             this.getWidthMethod = getWidthMethod;
             this.setXMethod = setXMethod;
             this.setYMethod = setYMethod;
+            this.activeField = activeField;
         }
 
         public static Names mojmap() {
@@ -418,7 +441,8 @@ public final class WorldListFilter {
                     "getY",
                     "getWidth",
                     "setX",
-                    "setY"
+                    "setY",
+                    "active"
             );
         }
 
@@ -445,7 +469,8 @@ public final class WorldListFilter {
                     "method_46427",
                     "method_25368",
                     "method_46421",
-                    "method_46419"
+                    "method_46419",
+                    "field_22763"
             );
         }
     }

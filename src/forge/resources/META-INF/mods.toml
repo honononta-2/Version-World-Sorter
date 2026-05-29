@@ -18,11 +18,11 @@ displayTest="IGNORE_ALL_VERSION"
     mandatory=true
     versionRange="[50,)"
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"
 
 [[dependencies.version_world_sorter]]
     modId="minecraft"
     mandatory=true
     versionRange="[1.20.5,)"
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"
