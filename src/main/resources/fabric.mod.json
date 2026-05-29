@@ -3,8 +3,17 @@
   "id": "version_world_sorter",
   "version": "${version}",
   "name": "Version World Sorter",
-  "description": "MCバージョンに合わないセーブをワールド選択画面から非表示にする",
+  "description": "Hides save worlds that don't match the current Minecraft version from the world selection screen.",
+  "license": "MIT",
   "icon": "icon.png",
+  "authors": [
+    "honononta-2"
+  ],
+  "contact": {
+    "homepage": "https://github.com/honononta-2/Version-World-Sorter/releases",
+    "sources": "https://github.com/honononta-2/Version-World-Sorter",
+    "issues": "https://github.com/honononta-2/Version-World-Sorter/issues"
+  },
   "environment": "client",
   "entrypoints": {
     "client": [

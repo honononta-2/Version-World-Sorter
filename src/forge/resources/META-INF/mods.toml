@@ -1,13 +1,16 @@
 modLoader="javafml"
 loaderVersion="[50,)"
 license="MIT"
+issueTrackerURL="https://github.com/honononta-2/Version-World-Sorter/issues"
 logoFile="icon.png"
 
 [[mods]]
 modId="version_world_sorter"
 version="${version}"
 displayName="Version World Sorter"
-description="MCバージョンに合わないセーブをワールド選択画面から非表示にする"
+description="Hides save worlds that don't match the current Minecraft version from the world selection screen."
+authors="honononta-2"
+displayURL="https://github.com/honononta-2/Version-World-Sorter"
 displayTest="IGNORE_ALL_VERSION"
 
 [[dependencies.version_world_sorter]]
