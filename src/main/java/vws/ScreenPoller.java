@@ -43,15 +43,13 @@ public final class ScreenPoller {
 
     private static void pollLoop(WorldListFilter filter, McNames names) {
         Method getInstance;
-        Field screenField;
+        ScreenGetter screenGetter;
         Method execute;
         try {
             Class<?> mcClass = Class.forName(names.mcClass);
             getInstance = mcClass.getMethod(names.getInstance);
-            screenField = mcClass.getDeclaredField(names.screenField);
-            screenField.setAccessible(true);
+            screenGetter = resolveScreenGetter(mcClass, names);
             execute = mcClass.getMethod("execute", Runnable.class);
-            Log.log("poll setup ok");
         } catch (Throwable t) {
             Log.log("poll setup failed", t);
             return;
@@ -66,7 +64,7 @@ public final class ScreenPoller {
                     Thread.sleep(100);
                     continue;
                 }
-                Object screen = screenField.get(mc);
+                Object screen = screenGetter.get(mc);
                 if (screen != lastSeenScreen) {
                     Log.log("screen=" + (screen == null ? "null" : screen.getClass().getName()));
                     lastSeenScreen = screen;
@@ -100,5 +98,26 @@ public final class ScreenPoller {
                 }
             }
         }
+    }
+
+    private static ScreenGetter resolveScreenGetter(Class<?> mcClass, McNames names) throws Exception {
+        try {
+            Class<?> guiClass = Class.forName("net.minecraft.client.gui.Gui");
+            Method screenMethod = guiClass.getMethod("screen");
+            Field guiField = mcClass.getDeclaredField("gui");
+            guiField.setAccessible(true);
+            Log.log("poll setup ok (Gui.screen())");
+            return mc -> screenMethod.invoke(guiField.get(mc));
+        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignore) {
+        }
+        Field f = mcClass.getDeclaredField(names.screenField);
+        f.setAccessible(true);
+        Log.log("poll setup ok (Minecraft." + names.screenField + ")");
+        return f::get;
+    }
+
+    @FunctionalInterface
+    private interface ScreenGetter {
+        Object get(Object mc) throws Exception;
     }
 }
